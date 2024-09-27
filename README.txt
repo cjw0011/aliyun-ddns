@@ -19,6 +19,6 @@ nano ~/.bash_profile
 export ALIBABA_CLOUD_ACCESS_KEY_ID="your_access_key_id"
 export ALIBABA_CLOUD_ACCESS_KEY_SECRET="your_access_key_secret"
 source ~/.bash_profile
-
+简简单单希望有帮助
 
 
