@@ -7,26 +7,24 @@ from aliyunsdkcore.client import AcsClient
 from aliyunsdkcore.auth.credentials import AccessKeyCredential
 from aliyunsdkalidns.request.v20150109.DescribeDomainRecordsRequest import DescribeDomainRecordsRequest
 from aliyunsdkalidns.request.v20150109.UpdateDomainRecordRequest import UpdateDomainRecordRequest
+import platform
 
-#定义配置文件
 CONFIG_FILE = "dns_config.pkl"
 
-#定义用户输入交互
 def get_user_input(prompt, default=None):
     user_input = input(f"{prompt} (默认: {default}): ") or default
     return user_input
-    
-#定义保存配置文件
+
 def save_config(config):
     with open(CONFIG_FILE, 'wb') as f:
         pickle.dump(config, f)
-#定义加载配置文件
+
 def load_config():
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, 'rb') as f:
             return pickle.load(f)
     return None
-#定义清除配置文件
+
 def clear_config():
     if os.path.exists(CONFIG_FILE):
         os.remove(CONFIG_FILE)
@@ -34,7 +32,25 @@ def clear_config():
     else:
         print("没有找到配置文件。")
 
+def clear_dns_cache():
+    os_type = platform.system()
+    try:
+        if os_type == "Linux":
+            subprocess.run(['sudo', 'systemd-resolve', '--flush-caches'], check=True)
+            print("DNS缓存已清理（systemd-resolve）。")
+        elif os_type == "Windows":
+            subprocess.run(['ipconfig', '/flushdns'], check=True)
+            print("DNS缓存已清理（Windows）。")
+        elif os_type == "Darwin":  # macOS
+            subprocess.run(['sudo', 'killall', '-HUP', 'mDNSResponder'], check=True)
+            print("DNS缓存已清理（macOS）。")
+    except subprocess.CalledProcessError as e:
+        print(f"清理DNS缓存时出错：{e}")
+
 def main():
+    # 清理DNS缓存
+    clear_dns_cache()
+
     # 检查是否存在已保存的配置
     saved_config = load_config()
     using_saved_config = False
@@ -81,7 +97,7 @@ def main():
 
         request = DescribeDomainRecordsRequest()
         request.set_accept_format('json')
-        request.set_DomainName("mylabcdd.top")
+        request.set_DomainName(domain)
         request.set_RRKeyWord(domain.split('.')[0])  # 使用主机名部分作为RR
 
         response = client.do_action_with_exception(request)
@@ -100,8 +116,11 @@ def main():
             update_request.set_Type(dns_type)
             update_request.set_Value(public_ip)
 
-            update_response = client.do_action_with_exception(update_request)
-            print("DNS记录更新成功", str(update_response, encoding='utf-8'))
+            try:
+                update_response = client.do_action_with_exception(update_request)
+                print("DNS记录更新成功", str(update_response, encoding='utf-8'))
+            except Exception as e:
+                print(f"更新DNS记录时出错：{e}")
         else:
             print("未找到RecordID，无法更新DNS记录")
 
@@ -115,4 +134,3 @@ if __name__ == "__main__":
         clear_config()
     else:
         main()
-#清除配置使用 python changedns_v2.py clear
