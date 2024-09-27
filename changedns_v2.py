@@ -12,10 +12,10 @@ from aliyunsdkalidns.request.v20150109.UpdateDomainRecordRequest import UpdateDo
 import platform
 import traceback  # 用于捕获详细的错误信息
 
-# 设置日志配置
+# 设置日志配置，指定编码为 UTF-8
 logging.basicConfig(filename="dns_update.log", level=logging.INFO, 
                     format="%(asctime)s - %(levelname)s - %(message)s", 
-                    filemode="a")  # 使用 "a" 模式追加日志
+                    filemode="a", encoding="utf-8")  # 设置日志文件的编码
 
 CONFIG_FILE = "dns_config.pkl"
 
@@ -44,12 +44,12 @@ def get_user_input(prompt, default=None):
     return user_input
 
 def save_config(config):
-    with open(CONFIG_FILE, 'wb') as f:
+    with open(CONFIG_FILE, 'wb') as f:  # 保持为二进制模式
         pickle.dump(config, f)
 
 def load_config():
     if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, 'rb') as f:
+        with open(CONFIG_FILE, 'rb') as f:  # 保持为二进制模式读取
             return pickle.load(f)
     return None
 
