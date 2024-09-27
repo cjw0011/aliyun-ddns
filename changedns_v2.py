@@ -8,22 +8,25 @@ from aliyunsdkcore.auth.credentials import AccessKeyCredential
 from aliyunsdkalidns.request.v20150109.DescribeDomainRecordsRequest import DescribeDomainRecordsRequest
 from aliyunsdkalidns.request.v20150109.UpdateDomainRecordRequest import UpdateDomainRecordRequest
 
+#定义配置文件
 CONFIG_FILE = "dns_config.pkl"
 
+#定义用户输入交互
 def get_user_input(prompt, default=None):
     user_input = input(f"{prompt} (默认: {default}): ") or default
     return user_input
-
+    
+#定义保存配置文件
 def save_config(config):
     with open(CONFIG_FILE, 'wb') as f:
         pickle.dump(config, f)
-
+#定义加载配置文件
 def load_config():
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, 'rb') as f:
             return pickle.load(f)
     return None
-
+#定义清除配置文件
 def clear_config():
     if os.path.exists(CONFIG_FILE):
         os.remove(CONFIG_FILE)
@@ -112,3 +115,4 @@ if __name__ == "__main__":
         clear_config()
     else:
         main()
+#清除配置使用 python changedns_v2.py clear
