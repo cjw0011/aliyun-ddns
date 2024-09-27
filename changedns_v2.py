@@ -11,6 +11,20 @@ import platform
 
 CONFIG_FILE = "dns_config.pkl"
 
+def clear_dns_cache():
+    os_name = platform.system()
+    try:
+        if os_name == "Windows":
+            subprocess.run(["ipconfig", "/flushdns"], check=True)
+        elif os_name == "Darwin":  # macOS
+            subprocess.run(["sudo", "killall", "-HUP", "mDNSResponder"], check=True)
+        elif os_name == "Linux":
+            # 针对不同Linux发行版
+            subprocess.run(["sudo", "systemd-resolve", "--flush-caches"], check=True)
+        print("DNS缓存已清理。")
+    except subprocess.CalledProcessError:
+        print("清理DNS缓存时出错。")
+
 def get_user_input(prompt, default=None):
     user_input = input(f"{prompt} (默认: {default}): ") or default
     return user_input
@@ -31,21 +45,6 @@ def clear_config():
         print("配置已清除。")
     else:
         print("没有找到配置文件。")
-
-def clear_dns_cache():
-    os_type = platform.system()
-    try:
-        if os_type == "Linux":
-            subprocess.run(['sudo', 'systemd-resolve', '--flush-caches'], check=True)
-            print("DNS缓存已清理（systemd-resolve）。")
-        elif os_type == "Windows":
-            subprocess.run(['ipconfig', '/flushdns'], check=True)
-            print("DNS缓存已清理（Windows）。")
-        elif os_type == "Darwin":  # macOS
-            subprocess.run(['sudo', 'killall', '-HUP', 'mDNSResponder'], check=True)
-            print("DNS缓存已清理（macOS）。")
-    except subprocess.CalledProcessError as e:
-        print(f"清理DNS缓存时出错：{e}")
 
 def main():
     # 清理DNS缓存
@@ -97,7 +96,7 @@ def main():
 
         request = DescribeDomainRecordsRequest()
         request.set_accept_format('json')
-        request.set_DomainName(domain)
+        request.set_DomainName("mylabcdd.top")
         request.set_RRKeyWord(domain.split('.')[0])  # 使用主机名部分作为RR
 
         response = client.do_action_with_exception(request)
@@ -116,11 +115,8 @@ def main():
             update_request.set_Type(dns_type)
             update_request.set_Value(public_ip)
 
-            try:
-                update_response = client.do_action_with_exception(update_request)
-                print("DNS记录更新成功", str(update_response, encoding='utf-8'))
-            except Exception as e:
-                print(f"更新DNS记录时出错：{e}")
+            update_response = client.do_action_with_exception(update_request)
+            print("DNS记录更新成功", str(update_response, encoding='utf-8'))
         else:
             print("未找到RecordID，无法更新DNS记录")
 
